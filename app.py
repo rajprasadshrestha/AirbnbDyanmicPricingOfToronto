@@ -12,7 +12,6 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from sklearn.linear_model import  Ridge
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import train_test_split
-from numpy import logspace
 import lightgbm as lgb
 # %pip install shap
 import shap
