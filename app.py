@@ -1,7 +1,7 @@
 
 # Importing necessary libraries
-from nltk.data import find, path
 import nltk
+from nltk.data import find, path
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -31,7 +31,7 @@ def ensure_nltk_resources():
         nltk.download('vader_lexicon')
 
 ensure_nltk_resources()
-# Your existing code
+
 sia = SentimentIntensityAnalyzer()
 
 airbnb_df = pd.read_csv('dataset/Airbnb/Toronto.csv')
@@ -979,7 +979,7 @@ def inputdatapreprocess_encoding(lat,lon):
 
 
     # creating an object of sentiment intensity analyzer
-    ensure_nltk_resources()
+    # ensure_nltk_resources()
 
     # sia = SentimentIntensityAnalyzer()
     # creating new columns using polarity scores function
