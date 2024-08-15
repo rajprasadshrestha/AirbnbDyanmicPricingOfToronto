@@ -3,6 +3,7 @@ The AI-driven price prediction model aims to predict the prices of Airbnb listin
 
 ## Table of Contents
 - [Process](#process)
+- [Models Evaluation](#models-evaluation)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Project Structure](#project-structure)
@@ -37,6 +38,8 @@ The AI-driven price prediction model aims to predict the prices of Airbnb listin
 #### Model Interpretation
 <li> Used SHAP for local and global interpretations </li>
 
+## Models Evaluation
+![models_eval](https://github.com/user-attachments/assets/bc294a5c-7c52-4d58-b118-5efcb542f52d)
 
 
 ## Installation
