@@ -425,55 +425,55 @@ if run_pred_model:
     print(f'R2 Score: {r_test_r2}')
     print(f'MSE: {r_test_mse}')
 
-    # Define the MLP model
-    model_mlp = Sequential()
-
-    # Input Layer and First Hidden Layer
-    model_mlp.add(Dense(128, input_dim=X_train_scaled.shape[1], activation='relu', kernel_regularizer=l2(0.01)))
-    model_mlp.add(Dropout(0.3))
-
-    # Second Hidden Layer
-    model_mlp.add(Dense(64, activation='relu'))
-
-    # Third Hidden Layer
-    model_mlp.add(Dense(32, activation='relu'))
-
-    # Output Layer
-    model_mlp.add(Dense(1, activation='linear'))
-
-    # Compile the model
-    model_mlp.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
-
-    # Implement early stopping and learning rate reduction on plateau
-    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6)
-
-    # Train the model
-    # model_mlp.fit(X_train_scaled, y_train,
-    #                         validation_data=(X_test_scaled, y_test),
-    #                         epochs=100,
-    #                         batch_size=32,
-    #                         callbacks=[early_stopping, reduce_lr],
-    #                         verbose=-1)
-
-    # Predicting the price
-    train_pred_mlp = model_mlp.predict(X_train_scaled)
-    test_pred_mlp = model_mlp.predict(X_test_scaled)
-
-    # Evaluate MLP
-    m_train_r2 = r2_score(y_train, train_pred_mlp)
-    m_train_mse = mean_squared_error(y_train, train_pred_mlp)
-    m_test_r2 = r2_score(y_test, test_pred_mlp)
-    m_test_mse = mean_squared_error(y_test, test_pred_mlp)
-
-    # Calculating and printing the evaluation metrices values
-    print(f'\n--------MLP Train Fitting-----------')
-    print(f'R2 Score: {m_train_r2}')
-    print(f'MSE: {m_train_mse}')
-
-    print(f'--------MLP Test Fitting-----------')
-    print(f'R2 Score: {m_test_r2}')
-    print(f'MSE: {m_test_mse}')
+    # # Define the MLP model
+    # model_mlp = Sequential()
+    #
+    # # Input Layer and First Hidden Layer
+    # model_mlp.add(Dense(128, input_dim=X_train_scaled.shape[1], activation='relu', kernel_regularizer=l2(0.01)))
+    # model_mlp.add(Dropout(0.3))
+    #
+    # # Second Hidden Layer
+    # model_mlp.add(Dense(64, activation='relu'))
+    #
+    # # Third Hidden Layer
+    # model_mlp.add(Dense(32, activation='relu'))
+    #
+    # # Output Layer
+    # model_mlp.add(Dense(1, activation='linear'))
+    #
+    # # Compile the model
+    # model_mlp.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
+    #
+    # # Implement early stopping and learning rate reduction on plateau
+    # early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6)
+    #
+    # # Train the model
+    # # model_mlp.fit(X_train_scaled, y_train,
+    # #                         validation_data=(X_test_scaled, y_test),
+    # #                         epochs=100,
+    # #                         batch_size=32,
+    # #                         callbacks=[early_stopping, reduce_lr],
+    # #                         verbose=-1)
+    #
+    # # Predicting the price
+    # train_pred_mlp = model_mlp.predict(X_train_scaled)
+    # test_pred_mlp = model_mlp.predict(X_test_scaled)
+    #
+    # # Evaluate MLP
+    # m_train_r2 = r2_score(y_train, train_pred_mlp)
+    # m_train_mse = mean_squared_error(y_train, train_pred_mlp)
+    # m_test_r2 = r2_score(y_test, test_pred_mlp)
+    # m_test_mse = mean_squared_error(y_test, test_pred_mlp)
+    #
+    # # Calculating and printing the evaluation metrices values
+    # print(f'\n--------MLP Train Fitting-----------')
+    # print(f'R2 Score: {m_train_r2}')
+    # print(f'MSE: {m_train_mse}')
+    #
+    # print(f'--------MLP Test Fitting-----------')
+    # print(f'R2 Score: {m_test_r2}')
+    # print(f'MSE: {m_test_mse}')
     measures_values_are_available = True
 
     #LightGBM
