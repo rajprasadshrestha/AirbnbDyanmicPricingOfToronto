@@ -1,7 +1,6 @@
 
 # Importing necessary libraries
 import nltk
-from nltk.data import find, path
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -32,7 +31,8 @@ warnings.filterwarnings('ignore')
 #
 # ensure_nltk_resources()
 
-sia = nltk.data.SentimentIntensityAnalyzer()
+nltk.download('vader_lexicon')
+sia = SentimentIntensityAnalyzer()
 
 airbnb_df = pd.read_csv('dataset/Airbnb/Toronto.csv')
 airbnb_df['price'] = airbnb_df['price'].str.replace('[$,]', '', regex=True).astype(float)
