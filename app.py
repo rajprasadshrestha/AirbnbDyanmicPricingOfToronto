@@ -24,15 +24,15 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.regularizers import l2
 warnings.filterwarnings('ignore')
 
-def ensure_nltk_resources():
-    try:
-        find('sentiment/vader_lexicon.zip')
-    except LookupError:
-        nltk.download('vader_lexicon')
+# def ensure_nltk_resources():
+#     try:
+#         find('sentiment/vader_lexicon.zip')
+#     except LookupError:
+#         nltk.download('vader_lexicon')
+#
+# ensure_nltk_resources()
 
-ensure_nltk_resources()
-
-sia = SentimentIntensityAnalyzer()
+sia = nltk.data.SentimentIntensityAnalyzer()
 
 airbnb_df = pd.read_csv('dataset/Airbnb/Toronto.csv')
 airbnb_df['price'] = airbnb_df['price'].str.replace('[$,]', '', regex=True).astype(float)
