@@ -30,6 +30,10 @@ def ensure_nltk_resources():
     except LookupError:
         nltk.download('vader_lexicon')
 
+ensure_nltk_resources()
+# Your existing code
+sia = SentimentIntensityAnalyzer()
+
 airbnb_df = pd.read_csv('dataset/Airbnb/Toronto.csv')
 airbnb_df['price'] = airbnb_df['price'].str.replace('[$,]', '', regex=True).astype(float)
 
@@ -224,7 +228,7 @@ if run_pred_model:
 
 
     #creating an object of sentiment intensity analyzer
-    sia= SentimentIntensityAnalyzer()
+    # sia= SentimentIntensityAnalyzer()
 
     # creating new columns using polarity scores function
     data_train['title_scores'] = data_train['title'].apply(lambda title: sia.polarity_scores(str(title)))
@@ -337,7 +341,7 @@ if run_pred_model:
 
 
     #creating an object of sentiment intensity analyzer
-    sia= SentimentIntensityAnalyzer()
+    # sia= SentimentIntensityAnalyzer()
 
     # creating new columns using polarity scores function
     data_test['title_scores'] = data_test['title'].apply(lambda title: sia.polarity_scores(str(title)))
@@ -977,7 +981,7 @@ def inputdatapreprocess_encoding(lat,lon):
     # creating an object of sentiment intensity analyzer
     ensure_nltk_resources()
 
-    sia = SentimentIntensityAnalyzer()
+    # sia = SentimentIntensityAnalyzer()
     # creating new columns using polarity scores function
     input_test['title_scores'] = input_test['title'].apply(lambda title: sia.polarity_scores(str(title)))
     input_test['title_sentiment'] = input_test['title_scores'].apply(lambda score_dict: score_dict['compound'])
