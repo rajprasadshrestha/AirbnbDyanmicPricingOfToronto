@@ -641,75 +641,9 @@ st.markdown('---')
 st.subheader('Airbnb Listing characteristics')
 
 
-
 # Streamlit UI setup
 st.subheader("Toronto Address Locator with Map")
-# Get user address input
-# address = st.text_input("Enter your address:")
-# Geocode address to get initial location
 
-# import streamlit as st
-# import folium
-# from folium import IFrame
-# from streamlit_folium import st_folium
-# from folium.plugins import MiniMap
-#
-# # Function to check if coordinates are within Toronto
-# def is_within_toronto(lat, lon):
-#     return (43.6 <= lat <= 43.85) and (-79.5 <= lon <= -79.0)
-#
-# # Streamlit UI
-# st.title('Interactive Map with Pin')
-#
-# # Create a Folium map centered on Toronto
-# toronto_map = folium.Map(location=[43.7, -79.42], zoom_start=12)
-#
-# # Add a minimap
-# minimap = MiniMap()
-# toronto_map.add
-#
-# location = geolocator.geocode(address)
-# if location and is_within_toronto(location.latitude, location.longitude):
-#     st.success(f"Location found: {location.address}")
-#     lat, lon = location.latitude, location.longitude
-# else:
-#     st.error("Address not found or not within Toronto. Please try another address.")
-#     lat, lon = 43.7, -79.4  # Default to Toronto center if out of bounds
-#
-#
-#  # Create the Folium map centered on the location
-# m = folium.Map(location=[lat, lon], zoom_start=12)
-#
-#
-# # Add a draggable marker
-# marker = folium.Marker(
-#     location=[lat, lon],
-#     draggable=True,
-#     popup="Move me!"
-#
-# )
-#
-# marker.add_to(m)
-#
-#
-#
-# # Add MousePosition plugin to get lat/lon on click
-# MousePosition().add_to(m)
-#
-#
-# # Capture the new location when marker is moved
-# map_data = st_folium(m, width=700, height=500)
-#
-#
-# # Display latitude and longitude of the marker
-# if map_data["last_object_clicked"]:
-#     clicked_lat = map_data["last_object_clicked"]["lat"]
-#     clicked_lon = map_data["last_object_clicked"]["lng"]
-#
-#     if is_within_toronto(clicked_lat, clicked_lon):
-#         st.write(f"Selected location - Latitude: {clicked_lat}, Longitude: {clicked_lon}")
-#     else:
-#         st.warning("Selected location is outside Toronto boundaries. Please select within Toronto.")
 
 import streamlit as st
 import folium
