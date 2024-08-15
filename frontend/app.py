@@ -7,13 +7,12 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import folium
-from sklearn.model_selection import train_test_split
 from datetime import datetime
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from sklearn.linear_model import  Ridge
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import train_test_split
 from numpy import logspace
 import lightgbm as lgb
 # %pip install xgboost
@@ -47,8 +46,45 @@ with st.container():
 
 
 with st.container():
+    airbnb_df['price'] = airbnb_df['price'].str.replace('[$,]', '', regex=True).astype(float)
     st.header("Visualizations")
-    #Charts
+    
+
+    # Create a figure with two subplots
+
+    fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+
+    # Plot Room Type Distribution
+
+    room_type_counts = airbnb_df['room_type'].value_counts()
+
+    sns.barplot(x=room_type_counts.index, y=room_type_counts.values, ax=ax[0])
+
+    ax[0].set_title('Room Type Distribution')
+
+    ax[0].set_xlabel('Room Type')
+
+    ax[0].set_ylabel('Count')
+
+    # Plot Average Price per Room Type
+
+    avg_price_per_room = airbnb_df.groupby('room_type')['price'].mean().reset_index()
+
+    sns.barplot(x='room_type', y='price', data=avg_price_per_room, ax=ax[1])
+
+    ax[1].set_title('Average Price per Room Type')
+
+    ax[1].set_xlabel('Room Type')
+
+    ax[1].set_ylabel('Average Price')
+
+    # Show the plots
+
+    plt.tight_layout()
+
+    plt.show()
+
+    st.pyplot(fig)
 
 _, col2, _ = st.columns(3)
 with col2:
@@ -87,9 +123,7 @@ if run_pred_model:
 
     # Removing "$" from price and converting to float
     # print(airbnb_df['price'].dtype)
-    airbnb_df['price'] = airbnb_df['price'].str.replace('[$,]', '', regex=True).astype(float)
 
-    from sklearn.model_selection import train_test_split
 
     #train-test split 
     data_train, data_test = train_test_split(airbnb_df, test_size=0.10, random_state=42)
@@ -161,7 +195,7 @@ if run_pred_model:
         lambda row: haversine_distance(row['latitude'], row['longitude'], lat, lon), axis=1
     )
 
-    # Selecting non numerical columns from the dataframe
+    # Selecting non-numerical columns from the dataframe
     non_numerical_columns = data_train.select_dtypes(exclude=['number']).columns.tolist()
     categorical_columns = data_train[non_numerical_columns]
 
@@ -185,14 +219,17 @@ if run_pred_model:
     data_train.drop(columns=['host_response_time'], inplace=True)
 
     # Create the dummy variables without dropping the original column
-    dummy_vars = pd.get_dummies(data_train['property_type'], prefix='property')
+    dummy_vars_tp = pd.get_dummies(data_train['property_type'], prefix='property')
+    st.session_state.dummy_vars_tp = dummy_vars_tp
     # Concatenate the original DataFrame with the dummy variables
-    data_train = pd.concat([data_train, dummy_vars], axis=1)
+    data_train = pd.concat([data_train, dummy_vars_tp], axis=1)
 
     # Create the dummy variables without dropping the original column
-    dummy_vars = pd.get_dummies(data_train['room_type'], prefix='room_type')
+    dummy_vars_tr = pd.get_dummies(data_train['room_type'], prefix='room_type')
+    st.session_state.dummy_vars_tr = dummy_vars_tr
+
     # Concatenate the original DataFrame with the dummy variables
-    data_train = pd.concat([data_train, dummy_vars], axis=1)
+    data_train = pd.concat([data_train, dummy_vars_tr], axis=1)
 
 
     #creating an object of sentiment intensity analyzer
@@ -210,8 +247,6 @@ if run_pred_model:
     data_train.drop(['description', 'description_scores'], axis=1, inplace=True)
 
     train_features = data_train.copy()
-
-
 
     data_test['price'] = np.log(data_test['price'])
     non_numeric_columns = data_test.select_dtypes(include=['object']).columns
@@ -292,14 +327,22 @@ if run_pred_model:
     data_test.drop(columns=['host_response_time'], inplace=True)
 
     # Create the dummy variables without dropping the original column
-    dummy_vars = pd.get_dummies(data_test['property_type'], prefix='property')
+    dummy_test_vars = pd.get_dummies(data_test['property_type'], prefix='property')
+
+    # Align the columns in data_test to match those in data_train
+    dummy_test_vars = dummy_test_vars.reindex(columns=dummy_vars_tp.columns, fill_value=0)
+
     # Concatenate the original DataFrame with the dummy variables
-    data_test = pd.concat([data_test, dummy_vars], axis=1)
+    data_test = pd.concat([data_test, dummy_test_vars], axis=1)
 
     # Create the dummy variables without dropping the original column
-    dummy_vars = pd.get_dummies(data_test['room_type'], prefix='room_type')
+    dummy_test_vars = pd.get_dummies(data_test['room_type'], prefix='room_type')
+
+    # Align the columns in data_test to match those in data_train
+    dummy_test_vars = dummy_test_vars.reindex(columns=dummy_vars_tr.columns, fill_value=0)
+
     # Concatenate the original DataFrame with the dummy variables
-    data_test = pd.concat([data_test, dummy_vars], axis=1)
+    data_test = pd.concat([data_test, dummy_test_vars], axis=1)
 
 
     #creating an object of sentiment intensity analyzer
@@ -335,7 +378,7 @@ if run_pred_model:
     test_features = test_features.loc[test_features['price'] <= outlier(test_features['price'])[1]]
 
 
-    st.write(train_features)
+    # st.write(train_features)
 
 
     # X_train_selected.shape, X_test_selected.shape, X_train.shape, X_test.shape, y_train.shape, y_test.shape
@@ -348,10 +391,15 @@ if run_pred_model:
 
     #Drop property_type and room_type columns
     X_train.drop(columns=['property_type', 'room_type'],inplace=True)
-    X_train_scaled = scaler.fit_transform(X_train)
 
-    X_test.drop(columns=['property_type', 'room_type'],inplace=True)
+    # Aligning column discrepancy due to separating property types. Important step.
+    common_columns = X_train.columns.intersection(X_test.columns)
+    X_train = X_train[common_columns]
+    X_test = X_test[common_columns]
+
+    X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
+
 
 
     # Ridge Regression
@@ -402,7 +450,7 @@ if run_pred_model:
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6)
 
     # Train the model
-    history = model_mlp.fit(X_train_scaled, y_train,
+    model_mlp.fit(X_train_scaled, y_train,
                             validation_data=(X_test_scaled, y_test),
                             epochs=100,
                             batch_size=32,
@@ -438,25 +486,36 @@ if run_pred_model:
     # These are our training features for the final model
     X_train_selected = train_features.drop(columns=cols_to_drop)
     X_train_selected = X_train_selected.drop(['price'], axis=1)
+    X_train_selected = X_train_selected[sorted(X_train_selected.columns)]
     # Identify columns to drop
     # THese are our testing features for the final model
     cols_to_drop = test_features.filter(regex='^(property_(?!type$)|room_type_)').columns
     X_test_selected = test_features.drop(columns=cols_to_drop)
     X_test_selected = X_test_selected.drop(['price'], axis=1)
+    X_test_selected = X_test_selected[sorted(X_test_selected.columns)]
+
 
     # Drop categorical columns for other models
     X_train = train_features.drop(columns=['price', 'property_type', 'room_type'])
     X_test = test_features.drop(columns=['price', 'property_type', 'room_type'])
 
+    X_train = X_train[sorted(X_train.columns)]
+    X_test = X_test[sorted(X_test.columns)]
+
+
+
+
     # Aligning column discrepancy due to separating property types. Important step.
+    st.session_state.X_train_for_model = X_train.columns
+    st.session_state.X_test_for_model_data = X_test
     common_columns = X_train.columns.intersection(X_test.columns)
     X_train = X_train[common_columns]
+    st.session_state.X_train = X_train
     X_test = X_test[common_columns]
 
     # Selecting target for train and test
     y_train = train_features['price']
     y_test = test_features['price']
-
 
 
     # Build the model
@@ -515,7 +574,7 @@ if run_pred_model:
 
     st.session_state.model_evaluation = saved_model_evaluation
 
-    st.write(st.session_state.model)
+    # st.write(st.session_state.model)
 
 
 #run the model evaluation only if the st.session_state.model is not None
@@ -557,7 +616,7 @@ if 'model'  in  st.session_state:
         plt.tight_layout()
 
         # Display the plots in Streamlit
-        st.pyplot(fig)
+        st.pyplot(plt.gcf())
 
     
         col1, col2 = st.columns(2)
@@ -584,87 +643,141 @@ st.subheader('Airbnb Listing characteristics')
 
 
 
-# Initialize Nominatim API to get lat/lon from address
-geolocator = Nominatim(user_agent="streamlit-folium")
-
-
-
-# Toronto boundary box coordinates (southwest and northeast corners)
-TORONTO_BOUNDS = {
-
-    "north": 43.855,
-
-    "south": 43.580,
-
-    "west": -79.639,
-
-    "east": -79.115
-
-}
-
- 
-
-# Function to check if a point is within Toronto bounds
-def is_within_toronto(lat, lon):
-
-    return (TORONTO_BOUNDS["south"] <= lat <= TORONTO_BOUNDS["north"] and
-
-            TORONTO_BOUNDS["west"] <= lon <= TORONTO_BOUNDS["east"])
-
-
 # Streamlit UI setup
 st.subheader("Toronto Address Locator with Map")
 # Get user address input
-address = st.text_input("Enter your address:")
+# address = st.text_input("Enter your address:")
 # Geocode address to get initial location
-if address:
-    location = geolocator.geocode(address)
-    if location and is_within_toronto(location.latitude, location.longitude):
-        st.success(f"Location found: {location.address}")
-        lat, lon = location.latitude, location.longitude
-    else:
-        st.error("Address not found or not within Toronto. Please try another address.")
-        lat, lon = 43.7, -79.4  # Default to Toronto center if out of bounds
-else:
-    lat, lon = 43.7, -79.4  # Default to Toronto center
 
- # Create the Folium map centered on the location
-m = folium.Map(location=[lat, lon], zoom_start=12)
+# import streamlit as st
+# import folium
+# from folium import IFrame
+# from streamlit_folium import st_folium
+# from folium.plugins import MiniMap
+#
+# # Function to check if coordinates are within Toronto
+# def is_within_toronto(lat, lon):
+#     return (43.6 <= lat <= 43.85) and (-79.5 <= lon <= -79.0)
+#
+# # Streamlit UI
+# st.title('Interactive Map with Pin')
+#
+# # Create a Folium map centered on Toronto
+# toronto_map = folium.Map(location=[43.7, -79.42], zoom_start=12)
+#
+# # Add a minimap
+# minimap = MiniMap()
+# toronto_map.add
+#
+# location = geolocator.geocode(address)
+# if location and is_within_toronto(location.latitude, location.longitude):
+#     st.success(f"Location found: {location.address}")
+#     lat, lon = location.latitude, location.longitude
+# else:
+#     st.error("Address not found or not within Toronto. Please try another address.")
+#     lat, lon = 43.7, -79.4  # Default to Toronto center if out of bounds
+#
+#
+#  # Create the Folium map centered on the location
+# m = folium.Map(location=[lat, lon], zoom_start=12)
+#
+#
+# # Add a draggable marker
+# marker = folium.Marker(
+#     location=[lat, lon],
+#     draggable=True,
+#     popup="Move me!"
+#
+# )
+#
+# marker.add_to(m)
+#
+#
+#
+# # Add MousePosition plugin to get lat/lon on click
+# MousePosition().add_to(m)
+#
+#
+# # Capture the new location when marker is moved
+# map_data = st_folium(m, width=700, height=500)
+#
+#
+# # Display latitude and longitude of the marker
+# if map_data["last_object_clicked"]:
+#     clicked_lat = map_data["last_object_clicked"]["lat"]
+#     clicked_lon = map_data["last_object_clicked"]["lng"]
+#
+#     if is_within_toronto(clicked_lat, clicked_lon):
+#         st.write(f"Selected location - Latitude: {clicked_lat}, Longitude: {clicked_lon}")
+#     else:
+#         st.warning("Selected location is outside Toronto boundaries. Please select within Toronto.")
+
+import streamlit as st
+import folium
+from streamlit_folium import st_folium
+
+# Toronto bounds
+TORONTO_BOUNDS = {
+    'lat_min': 43.6,
+    'lat_max': 43.85,
+    'lon_min': -79.5,
+    'lon_max': -79.0
+}
 
 
+def is_within_bounds(lat, lon):
+    return (TORONTO_BOUNDS['lat_min'] <= lat <= TORONTO_BOUNDS['lat_max']) and (
+                TORONTO_BOUNDS['lon_min'] <= lon <= TORONTO_BOUNDS['lon_max'])
 
 
-# Add a draggable marker
+# Center of Toronto
+center_lat = 43.7
+center_lon = -79.42
+
+# Initialize variables to store latitude and longitude
+lat = center_lat
+lon = center_lon
+
+# Create a Folium map centered on Toronto
+m = folium.Map(location=[center_lat, center_lon], zoom_start=12)
+
+# Add a draggable marker for the city center
 marker = folium.Marker(
-    location=[lat, lon],
+    location=[center_lat, center_lon],
     draggable=True,
-    popup="Move me!"
-
+    popup="Drag me to select a location"
 )
-
 marker.add_to(m)
 
- 
+# Display the map
+st_data = st_folium(m, width=700, height=500)
 
-# Add MousePosition plugin to get lat/lon on click
-MousePosition().add_to(m)
+# Update lat and lon based on user interaction
+if 'last_object_clicked' in st_data and st_data['last_object_clicked']:
+    lat = st_data['last_object_clicked']['lat']
+    lon = st_data['last_object_clicked']['lng']
 
- 
-
-# Capture the new location when marker is moved
-map_data = st_folium(m, width=700, height=500)
-
- 
-
-# Display latitude and longitude of the marker
-if map_data["last_object_clicked"]:
-    clicked_lat = map_data["last_object_clicked"]["lat"]
-    clicked_lon = map_data["last_object_clicked"]["lng"]
-
-    if is_within_toronto(clicked_lat, clicked_lon):
-        st.write(f"Selected location - Latitude: {clicked_lat}, Longitude: {clicked_lon}")
+    if is_within_bounds(lat, lon):
+        lat = st_data['last_object_clicked']['lat']
+        lon = st_data['last_object_clicked']['lng']
+        # st.write(f"Marker Location: Latitude = {lat}, Longitude = {lon}")
     else:
-        st.warning("Selected location is outside Toronto boundaries. Please select within Toronto.")
+        # Inform user that the location is outside Toronto
+        st.write("Selected location is outside Toronto.")
+
+        lat = center_lat
+        lon = center_lon
+
+        # For visual consistency, reset marker to center of Toronto
+        m = folium.Map(location=[center_lat, center_lon], zoom_start=12)
+        folium.Marker(location=[center_lat, center_lon], draggable=True, popup="Drag me to select a location").add_to(m)
+        # st_data = st_folium(m, width=700, height=500)
+else:
+    st.write("Drag the marker to select a location.")
+
+# Use lat and lon as needed
+# For example, you might want to display or process these values elsewhere in your application
+st.write(f"Stored Coordinates: Latitude = {lat}, Longitude = {lon}")
 
 listing_title = st.text_input("Enter the list title")
 listing_description = st.text_area("Enter the list description")
@@ -808,8 +921,7 @@ def inputdatapreprocess_encoding(lat,lon):
     }
 
 
-    st.write(data)
-    # data = {k: [v] for k, v in data.items()}
+    # st.write(data)
 
 
     input_test = pd.DataFrame([data])
@@ -891,9 +1003,9 @@ def inputdatapreprocess_encoding(lat,lon):
     csv = input_test.to_csv(index=False).encode('utf-8')
 
     # Display the DataFrame
-    st.markdown('---')
-    st.subheader('Data preprocessing')
-    st.write(input_test)
+    # st.markdown('---')
+    # st.subheader('Data preprocessing')
+    # st.write(input_test)
 
     return input_test
 
@@ -905,8 +1017,7 @@ isPredictedPriceAvailable = False
 with st.container():
     st.markdown('---')
     st.subheader('Model Selection')
-    #Get the models from the session state
-
+    #Select the models from the user
     selected_model_name = st.selectbox('Select the model to predict the price', ('Ridge Regression', 'LightGBM', 'MLP'))
 
 # Price Prediction button
@@ -916,64 +1027,48 @@ with col2:
     run_preds = st.button('Predict the price')
 
 
-
     if run_preds:
         if selected_model_name == 'Ridge Regression':
 
-            #Create one hot encoding for the categorical columns using OneHotEncoder for 
+            #Get unique values of property_type and room_type
+            property_types = airbnb_df['property_type'].unique()
+            room_types = airbnb_df['room_type'].unique()
 
-            
-            # Create the one-hot encoding for the 'property_type' column
-            dummy_vars_property = pd.get_dummies(input_test['property_type'], prefix='property')
+            # st.write(st.session_state.dummy_vars_tp)
+            # Create the dummy variables without dropping the original column
+            dummy_vars = pd.get_dummies(property_types,prefix='property')
+            dummy_vars = dummy_vars.reindex(columns=st.session_state.dummy_vars_tp.columns, fill_value=0)
+
 
             # Concatenate the original DataFrame with the dummy variables
-            input_test = pd.concat([input_test, dummy_vars_property], axis=1)
+            input_test = pd.concat([input_test, dummy_vars], axis=1)
 
-            # Drop the original 'property_type' column
-            input_test.drop(columns=['property_type'], inplace=True)
-
-
-            # Create the one-hot encoding for the 'room_type' column
-            dummy_vars_property = pd.get_dummies(input_test['room_type'], prefix='room_type')
+            # st.write(st.session_state.dummy_vars_tr.columns)
+            # Create the dummy variables without dropping the original column
+            dummy_vars = pd.get_dummies(room_types, prefix='room_type')
+            dummy_vars = dummy_vars.reindex(columns=st.session_state.dummy_vars_tr.columns, fill_value=0)
 
             # Concatenate the original DataFrame with the dummy variables
-            input_test = pd.concat([input_test, dummy_vars_property], axis=1)
+            input_test = pd.concat([input_test, dummy_vars], axis=1)
+            input_test.drop(columns=['property_type', 'room_type'], inplace=True)
 
-            # Drop the original 'property_type' column
-            input_test.drop(columns=['room_type'], inplace=True)
+            # st.write(input_test.columns)
 
-            model = st.session_state.model['ridge'] #get the model from the session state
+            # Drop all nan values
+            input_test.dropna(inplace=True)
 
-            # Assuming X is your DataFrame and ridge is your Ridge model
-            X_columns = set(input_test.columns)
-            ridge_features = set(model.get_feature_names_out())
-
-            
-
-
-            # # Extract feature names
-            # ridge_feature_names = pipeline.named_steps['model'].get_feature_names_out()
-            # # Find the difference
-            # missing_in_X = ridge_features - X_columns
-            # extra_in_X = X_columns - ridge_features
-
-            # print("Features expected by Ridge but not in X:", missing_in_X)
-            # print("Features in X but not expected by Ridge:", extra_in_X)
-                
-            
-            input_test = input_test[sorted(input_test.columns)]
-
-            
-            
-            st.write(input_test)
-            model = st.session_state.model['ridge'] #get the model from the session state
-
+            # Feature Scaling
+            scaler = StandardScaler()
 
             input_test = input_test[sorted(input_test.columns)]
-            # print(set(model.ridgle_mo).difference(set(input_test.columns)))
-            # print(set(input_test.columns).difference(set(model.feature_names_in_)))
 
-            predicted_price = model.predict(input_test)
+            X_train_scaled = scaler.fit_transform(st.session_state.X_train)
+            X_test_scaled = scaler.transform(input_test)
+
+            # st.write(input_test)
+
+            model = st.session_state.model['ridge'] #get the model from the session state
+            predicted_price = model.predict(X_test_scaled)
             st.session_state.log_predicted_price = predicted_price
 
         elif selected_model_name == 'LightGBM':
@@ -988,18 +1083,47 @@ with col2:
             predicted_price = model.predict(input_test)
             st.session_state.log_predicted_price = predicted_price
         elif selected_model_name == 'MLP':
-            model = st.session_state.model['mlp']
+            # Get unique values of property_type and room_type
+            property_types = airbnb_df['property_type'].unique()
+            room_types = airbnb_df['room_type'].unique()
+
+            # st.write(st.session_state.dummy_vars_tp)
+            # Create the dummy variables without dropping the original column
+            dummy_vars = pd.get_dummies(property_types, prefix='property')
+            dummy_vars = dummy_vars.reindex(columns=st.session_state.dummy_vars_tp.columns, fill_value=0)
+
+            # Concatenate the original DataFrame with the dummy variables
+            input_test = pd.concat([input_test, dummy_vars], axis=1)
+
+            # st.write(st.session_state.dummy_vars_tr.columns)
+            # Create the dummy variables without dropping the original column
+            dummy_vars = pd.get_dummies(room_types, prefix='room_type')
+            dummy_vars = dummy_vars.reindex(columns=st.session_state.dummy_vars_tr.columns, fill_value=0)
+
+            # Concatenate the original DataFrame with the dummy variables
+            input_test = pd.concat([input_test, dummy_vars], axis=1)
+            input_test.drop(columns=['property_type', 'room_type'], inplace=True)
+
+            # st.write(input_test.columns)
+
+            # Drop all nan values
+            input_test.dropna(inplace=True)
+
+            # Feature Scaling
+            scaler = StandardScaler()
+
             input_test = input_test[sorted(input_test.columns)]
-            predicted_price = model.predict(input_test)
+
+            X_train_scaled = scaler.fit_transform(st.session_state.X_train)
+            X_test_scaled = scaler.transform(input_test)
+
+            # st.write(input_test)
+
+            model = st.session_state.model['mlp']  # get the model from the session state
+            predicted_price = model.predict(X_test_scaled)
             st.session_state.log_predicted_price = predicted_price
         else:
             st.error('Model not found')
-
-       
-        # print(set(model.feature_name_).difference(set(input_test.columns)))
-        # print(set(input_test.columns).difference(set(model.feature_name_)))
-
-        # X_test_scaled = scaler.transform(X_test)
 
 
         # st.write(predicted_price)
@@ -1029,31 +1153,46 @@ def XAI_SHAP(model, data, graph, obs=0):
     shap.initjs()
 
     # Create object to calculate SHAP values
+    # if selected_model_name == 'Ridge Regression':
+    #     # Create object to calculate SHAP values using LinearExplainer for Ridge model
+    #     masker = shap.maskers.Independent(data)
+    #     explainer = shap.LinearExplainer(model, masker)
+    # elif selected_model_name == 'MLP':
+    #     Create a masker using your training data (sample a subset if the data is large)
+    #     masker = shap.maskers.Independent(data)
+    #     # Initialize the SHAP KernelExplainer for your MLP model
+    #     explainer = shap.KernelExplainer(model.predict, masker)
+    # else:
     explainer = shap.Explainer(model)
     shap_values = explainer(data)
-    
+
+
     if graph == 'global':
         # Global Interpretability (feature importance)
         shap.plots.bar(shap_values, max_display=20)
-        
+
         # Global Interpretability (impact on target variable)
         shap.summary_plot(shap_values, data, max_display=20)
         
     else:
+        plt.figure(figsize=(10, 5))
         # Local Interpretability (coefficients)
         # shap.plots.bar(shap_values[obs], max_display=20)
         shap.plots.waterfall(shap_values[obs], max_display=20)
-
+        st.pyplot(plt.gcf())
         # Local Interpretability (force plots)
         # shap.plots.force(shap_values[obs])
     return shap_values
 
+if 'log_predicted_price' in st.session_state:
+    test = [input_test, st.session_state.log_predicted_price]
 
-test = [input_test, st.session_state.log_predicted_price]
+    # fig = plt.subplots(1, 1, figsize=(10, 20))
+    # plt.figure(figsize=(10, 5))
+if selected_model_name == 'LightGBM':
+        st.header("Local Interpratibility")
+        shap_values = XAI_SHAP(st.session_state.model['lightgbm'], test[0], 'local', 0)
+else:
+    pass
+   
 
-# Display the prediction
-with st.container():
-    fig, axes = plt.subplots(1, 1, figsize=(10, 5))
-    st.title("Local Interpratibility")
-    shap_values = XAI_SHAP(model, test[0], 'local', 0)
-    st.pyplot(fig)
