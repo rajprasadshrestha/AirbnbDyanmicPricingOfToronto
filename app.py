@@ -1,6 +1,5 @@
 
 # Importing necessary libraries
-import streamlit as st
 from nltk.data import find, path
 import nltk
 import pandas as pd
@@ -15,15 +14,9 @@ from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 from numpy import logspace
 import lightgbm as lgb
-# %pip install xgboost
-import xgboost as xgb
 # %pip install shap
 import shap
 import streamlit as st
-import folium
-from folium.plugins import MousePosition
-from streamlit_folium import st_folium
-from geopy.geocoders import Nominatim
 import warnings
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
@@ -38,7 +31,8 @@ def ensure_nltk_resources():
     except LookupError:
         nltk.download('vader_lexicon')
 
-airbnb_df = pd.read_csv('../dataset/Airbnb/Toronto.csv')
+airbnb_df = pd.read_csv('dataset/Airbnb/Toronto.csv')
+airbnb_df['price'] = airbnb_df['price'].str.replace('[$,]', '', regex=True).astype(float)
 
 with st.container():
     st.header("Airbnb listing dataset overview")
@@ -46,9 +40,7 @@ with st.container():
 
 
 with st.container():
-    airbnb_df['price'] = airbnb_df['price'].str.replace('[$,]', '', regex=True).astype(float)
     st.header("Visualizations")
-    
 
     # Create a figure with two subplots
 
