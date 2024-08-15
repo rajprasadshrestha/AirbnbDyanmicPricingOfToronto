@@ -976,7 +976,7 @@ def inputdatapreprocess_encoding(lat,lon):
 
 
     # creating an object of sentiment intensity analyzer
-    ensure_nltk_resources()
+    # ensure_nltk_resources()
 
     sia = SentimentIntensityAnalyzer()
     # creating new columns using polarity scores function
