@@ -1,6 +1,5 @@
 
 # Importing necessary libraries
-import nltk
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -23,15 +22,19 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.regularizers import l2
 warnings.filterwarnings('ignore')
 
-# def ensure_nltk_resources():
-#     try:
-#         find('sentiment/vader_lexicon.zip')
-#     except LookupError:
-#         nltk.download('vader_lexicon')
-#
-# ensure_nltk_resources()
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
-nltk.download('vader_lexicon')
+def ensure_nltk_resources():
+    try:
+        nltk.data.find('sentiment/vader_lexicon.zip')
+    except LookupError:
+        raise RuntimeError("vader_lexicon resource not found. Please ensure it is downloaded before running the app.")
+
+# Ensure NLTK resources are available
+ensure_nltk_resources()
+
+# Initialize SentimentIntensityAnalyzer
 sia = SentimentIntensityAnalyzer()
 
 airbnb_df = pd.read_csv('dataset/Airbnb/Toronto.csv')
