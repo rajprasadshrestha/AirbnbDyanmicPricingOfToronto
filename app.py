@@ -25,12 +25,12 @@ warnings.filterwarnings('ignore')
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
+
 def ensure_nltk_resources():
     try:
-        nltk.download('vader_lexicon')
-        # nltk.data.find('sentiment/vader_lexicon.zip')
+        nltk.data.find('sentiment/vader_lexicon.zip')
     except LookupError:
-        raise RuntimeError("vader_lexicon resource not found. Please ensure it is downloaded before running the app.")
+        nltk.download('vader_lexicon')
 
 # Ensure NLTK resources are available
 ensure_nltk_resources()
