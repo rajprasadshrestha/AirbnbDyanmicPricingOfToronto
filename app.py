@@ -449,12 +449,12 @@ if run_pred_model:
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6)
 
     # Train the model
-    model_mlp.fit(X_train_scaled, y_train,
-                            validation_data=(X_test_scaled, y_test),
-                            epochs=100,
-                            batch_size=32,
-                            callbacks=[early_stopping, reduce_lr],
-                            verbose=-1)
+    # model_mlp.fit(X_train_scaled, y_train,
+    #                         validation_data=(X_test_scaled, y_test),
+    #                         epochs=100,
+    #                         batch_size=32,
+    #                         callbacks=[early_stopping, reduce_lr],
+    #                         verbose=-1)
 
     # Predicting the price
     train_pred_mlp = model_mlp.predict(X_train_scaled)

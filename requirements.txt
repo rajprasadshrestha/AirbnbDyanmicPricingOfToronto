@@ -12,3 +12,4 @@ tensorflow
 shap
 seaborn
 matplotlib
+ipython
