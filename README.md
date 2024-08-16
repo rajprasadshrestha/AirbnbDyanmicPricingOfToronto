@@ -47,8 +47,8 @@ The AI-driven price prediction model aims to predict the prices of Airbnb listin
 1. **Clone the repository:**
 
     ```sh
-    git clone https://github.com/yourusername/airbnb-dynamic-pricing-toronto.git
-    cd airbnb-dynamic-pricing-toronto
+    git clone https://github.com/rajprasadshrestha/AirbnbDyanmicPricingOfToronto.git
+    cd AirbnbDyanmicPricingOfToronto
     ```
 
 2. **Create a virtual environment:**
